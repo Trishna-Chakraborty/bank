@@ -22,7 +22,7 @@ public class BankService {
     @Autowired
     BankRepository bankRepository;
 
-    @RabbitListener(queues="bank" )
+   /* @RabbitListener(queues="bank" )
     @SendTo("reply_queue")
     public  boolean addBalance(Double money,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
         System.out.println("Got request "+ money);
@@ -34,10 +34,24 @@ public class BankService {
         System.out.println("Sent response .");
         return true;
 
-    }
+    }*/
     public List post(Bank bank){
         bankRepository.save(bank);
         return bankRepository.findAll();
+    }
+
+    @RabbitListener(queues="bank" )
+    @SendTo("reply_queue")
+    public  String  addBalance(String str,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+        ObjectMapper objectMapper= new ObjectMapper();
+        Bank bank=objectMapper.readValue(str,Bank.class);
+        System.out.println("Got request "+ bank);;
+        bank.setId(UUID.randomUUID());
+        bankRepository.save(bank);
+        channel.basicAck(tag,false);
+        System.out.println("Sent response .");
+        return  str;
+
     }
 
 
