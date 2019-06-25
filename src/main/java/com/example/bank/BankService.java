@@ -40,16 +40,29 @@ public class BankService {
         return bankRepository.findAll();
     }
 
-    @RabbitListener(queues="bank" )
+    @RabbitListener(queues="postBank" )
     @SendTo("reply_queue")
-    public  String  addBalance(String str,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+    public  String  postBank(String str,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
         ObjectMapper objectMapper= new ObjectMapper();
         Bank bank=objectMapper.readValue(str,Bank.class);
-        System.out.println("Got request "+ bank);;
-        bank.setId(UUID.randomUUID());
+        System.out.println("Got request to post "+ bank);;
         bankRepository.save(bank);
         channel.basicAck(tag,false);
-        System.out.println("Sent response .");
+        System.out.println("Sent response from post.");
+        return  str;
+
+    }
+
+    @RabbitListener(queues="updateBank" )
+    @SendTo("reply_queue")
+    public  String  updateBank(String str,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+        ObjectMapper objectMapper= new ObjectMapper();
+        Bank bank=objectMapper.readValue(str,Bank.class);
+        System.out.println("Got request to update"+ bank);;
+        bankRepository.deleteById(bank.getId());
+        bankRepository.save(bank);
+        channel.basicAck(tag,false);
+        System.out.println("Sent response from update .");
         return  str;
 
     }

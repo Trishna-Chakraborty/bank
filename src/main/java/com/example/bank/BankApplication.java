@@ -14,12 +14,24 @@ import java.util.Map;
 @SpringBootApplication
 public class BankApplication {
     @Bean
-    Queue bankQueue() {
+    Queue postBankQueue() {
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("x-dead-letter-exchange", "dead_exchange");
         args.put("x-message-ttl", 60000);
-        return new Queue("bank", false, false, false, args);
+        //args.put("x-dead-letter-routing-key","post.#");
+        return new Queue("postBank", false, false, false, args);
+    }
+
+
+    @Bean
+    Queue updateBankQueue() {
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("x-dead-letter-exchange", "dead_exchange");
+        args.put("x-message-ttl", 60000);
+        //args.put("x-dead-letter-routing-key","post.#");
+        return new Queue("updateBank", false, false, false, args);
     }
 
     @Bean
@@ -28,8 +40,12 @@ public class BankApplication {
     }
 
     @Bean
-    Binding bankBinding(Queue bankQueue, DirectExchange bankExchange) {
-        return BindingBuilder.bind(bankQueue).to(bankExchange).with("");
+    Binding postBankBinding(Queue postBankQueue, DirectExchange bankExchange) {
+        return BindingBuilder.bind(postBankQueue).to(bankExchange).with("post.bank");
+    }
+    @Bean
+    Binding updateBankBinding(Queue updateBankQueue, DirectExchange bankExchange) {
+        return BindingBuilder.bind(updateBankQueue).to(bankExchange).with("update.bank");
     }
     public static void main(String[] args) {
         SpringApplication.run(BankApplication.class, args);
