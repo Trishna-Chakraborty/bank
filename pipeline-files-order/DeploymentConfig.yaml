@@ -1,0 +1,69 @@
+
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: bank
+  name: bank
+  namespace: ngfs-core-framework
+spec:
+  replicas: 1
+  selector:
+    app: bank
+    deploymentconfig: bank
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: bank
+        deploymentconfig: bank
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_DATABASE
+          value: test
+        - name: MYSQL_USER
+          value: root
+        - name: MYSQL_ROOT_PASSWORD
+          value: trishna
+        image: 'mysql:5.6'
+        imagePullPolicy: IfNotPresent
+        name: mysqlserver
+        ports:
+        - containerPort: 3306
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-data
+      - image: docker-registry.default.svc:5000/ngfs-core-framework/bank
+        imagePullPolicy: Always
+        name: bank-service
+        ports:
+        - containerPort: 8082
+          protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: bank
+  triggers:
+  - type: ConfigChange
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - bank-service
+      from:
+        kind: ImageStreamTag
+        name: 'bank:latest'
+        namespace: ngfs-core-framework
+    type: ImageChange
