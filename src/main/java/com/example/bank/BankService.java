@@ -47,7 +47,7 @@ public class BankService {
         Bank bank=objectMapper.readValue(str,Bank.class);
         System.out.println("Got request to post "+ bank);;
         bankRepository.save(bank);
-        channel.basicAck(tag,false);
+        //channel.basicAck(tag,false);
         System.out.println("Sent response from post.");
         return  str;
 
@@ -61,7 +61,7 @@ public class BankService {
         System.out.println("Got request to update"+ bank);;
         //bankRepository.deleteById(bank.getId());
         bankRepository.save(bank);
-        channel.basicAck(tag,false);
+        //channel.basicAck(tag,false);
         System.out.println("Sent response from update .");
         return  str;
 
