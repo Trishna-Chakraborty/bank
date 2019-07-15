@@ -34,6 +34,17 @@ public class BankApplication {
         return new Queue("updateBank", false, false, false, args);
     }
 
+
+    @Bean
+    Queue postLedgerUpdateBalanceQueue() {
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("x-dead-letter-exchange", "dead_exchange");
+        args.put("x-message-ttl", 60000);
+        //args.put("x-dead-letter-routing-key","post.#");
+        return new Queue("postLedgerUpdateBalance", false, false, false, args);
+    }
+
     @Bean
     DirectExchange bankExchange() {
         return new DirectExchange("bank_exchange");
@@ -46,6 +57,11 @@ public class BankApplication {
     @Bean
     Binding updateBankBinding(Queue updateBankQueue, DirectExchange bankExchange) {
         return BindingBuilder.bind(updateBankQueue).to(bankExchange).with("update.bank");
+    }
+
+    @Bean
+    Binding insertLedgerUpdateBalanceBinding(Queue postLedgerUpdateBalanceQueue, DirectExchange bankExchange) {
+        return BindingBuilder.bind(postLedgerUpdateBalanceQueue).to(bankExchange).with("post.ledger");
     }
     public static void main(String[] args) {
         SpringApplication.run(BankApplication.class, args);

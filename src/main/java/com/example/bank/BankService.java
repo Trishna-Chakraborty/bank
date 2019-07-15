@@ -22,6 +22,13 @@ public class BankService {
     @Autowired
     BankRepository bankRepository;
 
+
+    @Autowired
+    LedgerRepository ledgerRepository;
+
+    @Autowired
+    BalanceRepository balanceRepository;
+
    /* @RabbitListener(queues="bank" )
     @SendTo("reply_queue")
     public  boolean addBalance(Double money,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
@@ -66,6 +73,25 @@ public class BankService {
         return  str;
 
     }
+
+    @RabbitListener(queues="postLedgerUpdateBalance" )
+    @SendTo("reply_queue")
+    public  String  insertLedgerUpdateBalance(String str,Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+        ObjectMapper objectMapper= new ObjectMapper();
+        Ledger ledger=objectMapper.readValue(str,Ledger.class);
+        System.out.println("Got request to insert ledger"+ ledger);;
+        ledgerRepository.save(ledger);
+        Balance balance= objectMapper.readValue(str,Balance.class);
+        balanceRepository.save(balance);
+        //channel.basicAck(tag,false);
+        System.out.println("Sent response");
+        return  str;
+
+    }
+
+
+
+
 
 
 
